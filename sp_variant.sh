@@ -88,6 +88,11 @@ detect_from_os_release()
 		return
 	fi
 	
+	if [ "$os_id" = 'ol' ] && printf -- '%s\n' "$version_id" | grep -Eqe '^9($|\.[0-9])'; then
+		printf -- '%s\n' 'ORACLE9'
+		return
+	fi
+	
 	if [ "$os_id" = 'rhel' ] && printf -- '%s\n' "$version_id" | grep -Eqe '^8($|\.[4-9]|\.[1-9][0-9])'; then
 		printf -- '%s\n' 'RHEL8'
 		return
@@ -153,6 +158,11 @@ cmd_detect()
 	
 	if [ -r '/etc/redhat-release' ] && grep -Eqe '^Red[[:space:]]+Hat[[:space:]]+Enterprise[[:space:]]+Linux[[:space:]].*[[:space:]]8\.([4-9]|[1-9][0-9])' -- '/etc/redhat-release'; then
 		printf -- '%s\n' 'RHEL8'
+		return
+	fi
+	
+	if [ -r '/etc/oracle-release' ] && grep -Eqe '^Oracle[[:space:]]+Linux[[:space:]]+Server[[:space:]]+release[[:space:]].*[[:space:]]9\.([4-9]|[1-9][0-9])' -- '/etc/oracle-release'; then
+		printf -- '%s\n' 'ORACLE9'
 		return
 	fi
 	
@@ -1427,6 +1437,112 @@ show_ORACLE8()
 EOVARIANT_JSON
 }
 
+show_ORACLE9()
+{
+	cat <<'EOVARIANT_JSON'
+  {
+  "builder": {
+    "alias": "oracle9",
+    "base_image": "oraclelinux:9",
+    "branch": "",
+    "kernel_package": "kernel-core",
+    "utf8_locale": "C.UTF-8"
+  },
+  "commands": {
+    "package": {
+      "install": [
+        "dnf",
+        "--disablerepo=*",
+        "--enablerepo=ol9_appstream",
+        "--enablerepo=ol9_baseos_latest",
+        "--enablerepo=ol9_codeready_builder",
+        "--enablerepo=storpool-contrib",
+        "install",
+        "-q",
+        "-y",
+        "--"
+      ],
+      "list_all": [
+        "rpm",
+        "-qa",
+        "--qf",
+        "%{Name}\\t%{EVR}\\t%{Arch}\\tii\\n",
+        "--"
+      ],
+      "purge": [
+        "yum",
+        "remove",
+        "-q",
+        "-y",
+        "--"
+      ],
+      "remove": [
+        "yum",
+        "remove",
+        "-q",
+        "-y",
+        "--"
+      ],
+      "remove_impl": [
+        "rpm",
+        "-e",
+        "--"
+      ],
+      "update_db": [
+        "true"
+      ]
+    },
+    "pkgfile": {
+      "dep_query": [
+        "sh",
+        "-c",
+        "rpm -qpR -- \"$pkg\""
+      ],
+      "install": [
+        "sh",
+        "-c",
+        "\nunset to_install to_reinstall\nfor f in $packages; do\n    package=\"$(rpm -qp \"$f\")\"\n    if rpm -q -- \"$package\"; then\n        to_reinstall=\"$to_reinstall ./$f\"\n    else\n        to_install=\"$to_install ./$f\"\n    fi\ndone\n\nif [ -n \"$to_install\" ]; then\n    dnf install -y --disablerepo='*' --enablerepo=ol9_appstream,ol9_baseos_latest,ol9_codeready_builder,storpool-contrib --setopt=localpkg_gpgcheck=0 -- $to_install\nfi\nif [ -n \"$to_reinstall\" ]; then\n    dnf reinstall -y --disablerepo='*' --enablerepo=ol9_appstream,ol9_baseos_latest,ol9_codeready_builder,storpool-contrib --setopt=localpkg_gpgcheck=0 -- $to_reinstall\nfi\n"
+      ]
+    }
+  },
+  "descr": "Oracle Linux 9.x",
+  "detect": {
+    "filename": "/etc/oracle-release",
+    "os_id": "ol",
+    "os_version_regex": "^9(?:$|\\.[0-9])",
+    "regex": "^ Oracle \\s+ Linux \\s+ Server \\s+ release \\s .* \\s 9 \\. (?: [4-9] | [1-9][0-9] )"
+  },
+  "family": "redhat",
+  "file_ext": "rpm",
+  "initramfs_flavor": "mkinitrd",
+  "min_sys_python": "3.9",
+  "name": "ORACLE9",
+  "package": {
+    "KMOD": "kmod",
+    "LIBCGROUP": "bash",
+    "LIBUDEV": "systemd-libs",
+    "OPENSSL": "openssl-libs",
+    "PERL_AUTODIE": "perl-autodie",
+    "PERL_FILE_PATH": "perl-File-Path",
+    "PERL_LWP_PROTO_HTTPS": "perl-LWP-Protocol-https",
+    "PERL_SYS_SYSLOG": "perl-Sys-Syslog",
+    "PROCPS": "procps-ng",
+    "PYTHON_SIMPLEJSON": "bash",
+    "UDEV": "systemd"
+  },
+  "parent": "",
+  "repo": {
+    "keyring": "redhat/repo/RPM-GPG-KEY-StorPool",
+    "yumdef": "redhat/repo/storpool-centos.repo"
+  },
+  "supported": {
+    "repo": false
+  },
+  "systemd_lib": "usr/lib/systemd/system"
+}
+EOVARIANT_JSON
+}
+
 show_RHEL8()
 {
 	cat <<'EOVARIANT_JSON'
@@ -2221,6 +2337,7 @@ cmd_show_all()
     "ROCKY8",
     "ROCKY9",
     "RHEL8",
+    "ORACLE9",
     "ORACLE8",
     "ORACLE7",
     "CENTOS7",
@@ -2274,6 +2391,9 @@ EOPROLOGUE
   printf -- '    "%s": ' 'ORACLE8'
   show_ORACLE8
   echo ','
+  printf -- '    "%s": ' 'ORACLE9'
+  show_ORACLE9
+  echo ','
   printf -- '    "%s": ' 'RHEL8'
   show_RHEL8
   echo ','
@@ -2298,7 +2418,7 @@ EOPROLOGUE
 
 	cat <<'EOEPILOGUE'
   },
-  "version": "3.5.2"
+  "version": "3.5.3"
 }
 EOEPILOGUE
 }
@@ -2322,7 +2442,7 @@ EOPROLOGUE
 
 	cat <<'EOEPILOGUE'
   ,
-  "version": "3.5.2"
+  "version": "3.5.3"
 }
 EOEPILOGUE
 }
@@ -3364,6 +3484,104 @@ fi
 			esac
 			;;
 		
+		ORACLE9)
+			case "$cmd_cat" in
+				
+				package)
+					case "$cmd_item" in
+						
+						install)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'dnf' '--disablerepo=*' '--enablerepo=ol9_appstream' '--enablerepo=ol9_baseos_latest' '--enablerepo=ol9_codeready_builder' '--enablerepo=storpool-contrib' 'install' '-q' '-y' '--'  "$@"
+							;;
+						
+						list_all)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'rpm' '-qa' '--qf' '%{Name}\t%{EVR}\t%{Arch}\tii\n' '--'  "$@"
+							;;
+						
+						purge)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'yum' 'remove' '-q' '-y' '--'  "$@"
+							;;
+						
+						remove)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'yum' 'remove' '-q' '-y' '--'  "$@"
+							;;
+						
+						remove_impl)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'rpm' '-e' '--'  "$@"
+							;;
+						
+						update_db)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'true'  "$@"
+							;;
+						
+
+						*)
+							echo "Invalid command '$cmd_item' in the '$cmd_cat' category" 1>&2
+							exit 1
+							;;
+					esac
+					;;
+				
+				pkgfile)
+					case "$cmd_item" in
+						
+						dep_query)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'sh' '-c' 'rpm -qpR -- "$pkg"'  "$@"
+							;;
+						
+						install)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'sh' '-c' '
+unset to_install to_reinstall
+for f in $packages; do
+    package="$(rpm -qp "$f")"
+    if rpm -q -- "$package"; then
+        to_reinstall="$to_reinstall ./$f"
+    else
+        to_install="$to_install ./$f"
+    fi
+done
+
+if [ -n "$to_install" ]; then
+    dnf install -y --disablerepo='*' --enablerepo=ol9_appstream,ol9_baseos_latest,ol9_codeready_builder,storpool-contrib --setopt=localpkg_gpgcheck=0 -- $to_install
+fi
+if [ -n "$to_reinstall" ]; then
+    dnf reinstall -y --disablerepo='*' --enablerepo=ol9_appstream,ol9_baseos_latest,ol9_codeready_builder,storpool-contrib --setopt=localpkg_gpgcheck=0 -- $to_reinstall
+fi
+'  "$@"
+							;;
+						
+
+						*)
+							echo "Invalid command '$cmd_item' in the '$cmd_cat' category" 1>&2
+							exit 1
+							;;
+					esac
+					;;
+				
+
+				*)
+					echo "Invalid command category '$cmd_cat'" 1>&2
+					exit 1
+					;;
+			esac
+			;;
+		
 		RHEL8)
 			case "$cmd_cat" in
 				
@@ -4189,6 +4407,12 @@ cmd_repo_add()
 			
 			;;
 		
+		ORACLE9)
+			
+			repo_add_yum 'ORACLE9' "$vdir" "$repotype" 'redhat/repo/storpool-centos.repo' 'redhat/repo/RPM-GPG-KEY-StorPool'
+			
+			;;
+		
 		RHEL8)
 			
 			repo_add_yum 'RHEL8' "$vdir" "$repotype" 'redhat/repo/storpool-centos.repo' 'redhat/repo/RPM-GPG-KEY-StorPool'
@@ -4282,7 +4506,7 @@ cmd_command()
 
 cmd_features()
 {
-	echo 'Features: format=1.4 version=3.5.2'
+	echo 'Features: format=1.4 version=3.5.3'
 }
 
 case "$1" in
@@ -4372,6 +4596,10 @@ case "$1" in
 			
 			ORACLE8)
 				show_variant 'ORACLE8'
+				;;
+			
+			ORACLE9)
+				show_variant 'ORACLE9'
 				;;
 			
 			RHEL8)

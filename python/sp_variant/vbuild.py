@@ -687,6 +687,123 @@ fi
             },
         },
     ),
+    defs.Variant(
+        name="ORACLE9",
+        descr="Oracle Linux 9.x",
+        parent="",
+        family="redhat",
+        detect=defs.Detect(
+            filename="/etc/oracle-release",
+            regex=re.compile(
+                r"^ Oracle \s+ Linux \s+ Server \s+ release \s .* "
+                r"\s 9 \. (?: [4-9] | [1-9][0-9] )",
+                re.X,
+            ),
+            os_id="ol",
+            os_version_regex=re.compile(r"^9(?:$|\.[0-9])"),
+        ),
+        supported=defs.Supported(repo=False),
+        commands=defs.Commands(
+            package=defs.CommandsPackage(
+                update_db=CMD_NOOP,
+                install=[
+                    "dnf",
+                    "--disablerepo=*",
+                    "--enablerepo=ol9_appstream",
+                    "--enablerepo=ol9_baseos_latest",
+                    "--enablerepo=ol9_codeready_builder",
+                    "--enablerepo=storpool-contrib",
+                    "install",
+                    "-q",
+                    "-y",
+                    "--",
+                ],
+                list_all=[
+                    "rpm",
+                    "-qa",
+                    "--qf",
+                    r"%{Name}\t%{EVR}\t%{Arch}\tii\n",
+                    "--",
+                ],
+                purge=[
+                    "yum",
+                    "remove",
+                    "-q",
+                    "-y",
+                    "--",
+                ],
+                remove=[
+                    "yum",
+                    "remove",
+                    "-q",
+                    "-y",
+                    "--",
+                ],
+                remove_impl=[
+                    "rpm",
+                    "-e",
+                    "--",
+                ],
+            ),
+            pkgfile=defs.CommandsPkgFile(
+                dep_query=[
+                    "sh",
+                    "-c",
+                    'rpm -qpR -- "$pkg"',
+                ],
+                install=[
+                    "sh",
+                    "-c",
+                    """
+unset to_install to_reinstall
+for f in $packages; do
+    package="$(rpm -qp "$f")"
+    if rpm -q -- "$package"; then
+        to_reinstall="$to_reinstall ./$f"
+    else
+        to_install="$to_install ./$f"
+    fi
+done
+
+if [ -n "$to_install" ]; then
+    dnf install -y --disablerepo='*' --enablerepo=ol9_appstream,ol9_baseos_latest,ol9_codeready_builder,storpool-contrib --setopt=localpkg_gpgcheck=0 -- $to_install
+fi
+if [ -n "$to_reinstall" ]; then
+    dnf reinstall -y --disablerepo='*' --enablerepo=ol9_appstream,ol9_baseos_latest,ol9_codeready_builder,storpool-contrib --setopt=localpkg_gpgcheck=0 -- $to_reinstall
+fi
+""",  # noqa: E501
+                ],
+            ),
+        ),
+        min_sys_python="3.9",
+        repo=defs.YumRepo(
+            yumdef="redhat/repo/storpool-centos.repo",
+            keyring="redhat/repo/RPM-GPG-KEY-StorPool",
+        ),
+        package={
+            "KMOD": "kmod",
+            "LIBCGROUP": "bash",
+            "LIBUDEV": "systemd-libs",
+            "OPENSSL": "openssl-libs",
+            "PERL_AUTODIE": "perl-autodie",
+            "PERL_FILE_PATH": "perl-File-Path",
+            "PERL_LWP_PROTO_HTTPS": "perl-LWP-Protocol-https",
+            "PERL_SYS_SYSLOG": "perl-Sys-Syslog",
+            "PYTHON_SIMPLEJSON": "bash",
+            "PROCPS": "procps-ng",
+            "UDEV": "systemd",
+        },
+        systemd_lib="usr/lib/systemd/system",
+        file_ext="rpm",
+        initramfs_flavor="mkinitrd",
+        builder=defs.Builder(
+            alias="oracle9",
+            base_image="oraclelinux:9",
+            branch="",
+            kernel_package="kernel-core",
+            utf8_locale="C.UTF-8",
+        ),
+    ),
     defs.VariantUpdate(
         name="RHEL8",
         descr="RedHat Enterprise Linux 8.x",
