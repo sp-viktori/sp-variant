@@ -373,6 +373,18 @@ check_locale()
     fi
 }
 
+fix_centos_eol_repos()
+{
+    # Fix EOL CentOS repos and mirrorlist usage
+    if /sp/storpool_variant detect | grep -q 'CENTOS[78]'; then
+        echo 'Fixing CentOS EOL repos'
+        for repo in /etc/yum.repos.d/CentOS-*; do
+            sed -r -i'' -e 's,^mirrorlist=,#mirrorlist=,' \\
+                -e 's,^#baseurl=http(s?)://mirror,baseurl=http\\1://vault,' "$repo"
+        done
+    fi
+}
+
 # Make sure LC_ALL is set to a valid UTF-8-capable locale
 echo 'Checking whether LC_ALL specifies a valid UTF-8-capable locale'
 check_locale 'The LC_ALL environment variable' "$LC_ALL"
@@ -382,6 +394,8 @@ trap "rm -f -- '$tempf'" HUP INT TERM EXIT
 echo "Stashing the `sp_variant show current` output into $tempf"
 /sp/storpool_variant show current > "$tempf"
 
+fix_centos_eol_repos
+
 # Parsing JSON without jq? Yeah, sure, why not...
 echo 'Checking for a Debian-like variant'
 unset is_debian
@@ -390,8 +404,11 @@ if tr "\n" ' ' < "$tempf" | grep -Eqe '"family"[[:space:]]*:[[:space:]]*"debian"
     echo 'Running apt-get update'
     apt-get update
 elif [ "$(/sp/storpool_variant detect)" = 'CENTOS8' ]; then
+    echo 'Installing CentOS GPG keys'
+    yum install -y centos-gpg-keys
     echo 'Running dnf swap centos-linux-repos centos-stream-repos'
     dnf --disablerepo '*' --enablerepo extras -y swap centos-linux-repos centos-stream-repos
+    fix_centos_eol_repos
 else
     echo 'No apt-get update or dnf swap necessary'
 fi
