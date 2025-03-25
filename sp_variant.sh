@@ -216,7 +216,7 @@ cmd_detect()
 		return
 	fi
 	
-	if [ -r '/etc/os-release' ] && grep -Eqe '^PRETTY_NAME=.*Ubuntu[[:space:]]+.*Noble' -- '/etc/os-release'; then
+	if [ -r '/etc/os-release' ] && grep -Eqe '^PRETTY_NAME=.*(Ubuntu[[:space:]]+.*Noble|Mint[[:space:]]+22)' -- '/etc/os-release'; then
 		printf -- '%s\n' 'UBUNTU2404'
 		return
 	fi
@@ -2283,7 +2283,7 @@ show_UBUNTU2404()
     "filename": "/etc/os-release",
     "os_id": "ubuntu",
     "os_version_regex": "^24\\.04$",
-    "regex": "^ PRETTY_NAME= .* Ubuntu \\s+ .* Noble "
+    "regex": "^ PRETTY_NAME= .* (?: Ubuntu \\s+ .* Noble | Mint \\s+ 22 ) "
   },
   "family": "debian",
   "file_ext": "deb",

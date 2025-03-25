@@ -228,7 +228,7 @@ _VARIANT_DEF: Final[list[defs.Variant | defs.VariantUpdate]] = [
         detect=defs.Detect(
             filename="/etc/os-release",
             regex=re.compile(
-                r"^ PRETTY_NAME= .* Ubuntu \s+ .* Noble ",
+                r"^ PRETTY_NAME= .* (?: Ubuntu \s+ .* Noble | Mint \s+ 22 ) ",
                 re.X,
             ),
             os_id="ubuntu",

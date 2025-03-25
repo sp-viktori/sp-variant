@@ -3031,7 +3031,7 @@ fi
                                 detect: Detect {
                                     filename: "/etc/os-release".to_owned(),
                                     #[allow(clippy::needless_raw_strings)]
-                                    regex: r"^ PRETTY_NAME= .* Ubuntu \s+ .* Noble ".to_owned(),
+                                    regex: r"^ PRETTY_NAME= .* (?: Ubuntu \s+ .* Noble | Mint \s+ 22 ) ".to_owned(),
                                     os_id: "ubuntu".to_owned(),
                                     #[allow(clippy::needless_raw_strings)]
                                     os_version_regex: r"^24\.04$".to_owned(),
