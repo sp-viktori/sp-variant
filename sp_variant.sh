@@ -2418,7 +2418,7 @@ EOPROLOGUE
 
 	cat <<'EOEPILOGUE'
   },
-  "version": "3.5.3"
+  "version": "3.5.4"
 }
 EOEPILOGUE
 }
@@ -2442,7 +2442,7 @@ EOPROLOGUE
 
 	cat <<'EOEPILOGUE'
   ,
-  "version": "3.5.3"
+  "version": "3.5.4"
 }
 EOEPILOGUE
 }
@@ -4506,7 +4506,7 @@ cmd_command()
 
 cmd_features()
 {
-	echo 'Features: format=1.4 version=3.5.3'
+	echo 'Features: format=1.4 version=3.5.4'
 }
 
 case "$1" in

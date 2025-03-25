@@ -12,6 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.5.4] - 2025-03-25
+
+### Other changes
+
+- all:
+    - remove expiration from GPG repo key signatures; keys are unchanged and
+      previously issued signatures are still valid
+
 ## [3.5.3] - 2025-02-06
 
 ### Additions
@@ -633,7 +641,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - First public release.
 
-[Unreleased]: https://github.com/storpool/sp-variant/compare/release/3.5.3...main
+[Unreleased]: https://github.com/storpool/sp-variant/compare/release/3.5.4...main
+[3.5.4]: https://github.com/storpool/sp-variant/compare/release/3.5.3...release/3.5.4
 [3.5.3]: https://github.com/storpool/sp-variant/compare/release/3.5.2...release/3.5.3
 [3.5.2]: https://github.com/storpool/sp-variant/compare/release/3.5.1...release/3.5.2
 [3.5.1]: https://github.com/storpool/sp-variant/compare/release/3.5.0...release/3.5.1
