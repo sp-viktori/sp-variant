@@ -12,6 +12,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.5.4] - 2025-03-25
+
+### Additions
+
+- add Mint 22 as a Ubuntu 24.04 variant
+
+### Other changes
+
+- remove expiration from GPG repo key signatures; keys are unchanged and
+  previously issued signatures are still valid
+
 ## [3.5.3] - 2025-02-06
 
 ### Additions
