@@ -124,7 +124,7 @@ def filter_docker_images(cfg: Config, var_data: dict[str, SimpleVariant]) -> dic
     )
 
     res: Final = {}
-    ignored: Final = {"IGNORE", "centos:6"}
+    ignored: Final = {"IGNORE", "centos:6", "debian:buster"}
     for var in var_data.values():
         for image in (var.builder.base_image, "builder:" + var.builder.alias):
             if image in ignored:
