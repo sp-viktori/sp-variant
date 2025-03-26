@@ -379,7 +379,8 @@ fix_centos_eol_repos()
     if /sp/storpool_variant detect | grep -q 'CENTOS[78]'; then
         echo 'Fixing CentOS EOL repos'
         for repo in /etc/yum.repos.d/CentOS-*; do
-            sed -r -i'' -e 's,^mirrorlist=,#mirrorlist=,' -e 's,^#baseurl=https?://mirror,baseurl=http://vault,' "$repo"
+            sed -r -i'' -e 's,^mirrorlist=,#mirrorlist=,' \
+                -e 's,^#baseurl=https?://mirror,baseurl=http://vault,' "$repo"
         done
     fi
 }
